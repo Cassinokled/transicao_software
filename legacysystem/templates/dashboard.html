@@ -44,7 +44,7 @@
                 <a href="#notificacoes" class="item-nav" title="Notificações">
                     <img src="{% static '/icons/notificacao_icon.svg' %}" alt="Notificações">
                 </a>
-                <a href="#perfil" class="item-nav" title="Perfil">
+                <a href="{% url 'perfil' %}" class="item-nav" title="Perfil">
                     <img src="{% static '/icons/user_icon.svg' %}" alt="Perfil">
                 </a>
                 <a href="{% url 'logout' %}" class="item-nav" title="Sair">

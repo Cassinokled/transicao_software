@@ -9,6 +9,9 @@ from django.contrib.auth.decorators import login_required
 def home(request):
     return render(request, 'home.html')
 
+def perfil_view(request):
+    return render(request, 'perfil.html')
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
