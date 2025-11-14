@@ -1,0 +1,338 @@
+/* ======= BASE ======= */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.container-dashboard {
+    display: flex;
+    height: 100vh; /* ocupa toda a altura da tela */
+}
+
+main {
+    min-height: auto !important;
+    height: auto !important;
+}
+
+.clientes-main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+/* título */
+.clientes-main h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    color: #fff;
+    margin-bottom: 25px;
+}
+
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* mantém tudo no mesmo eixo */
+    gap: 15px; /* espaço entre busca e botão */
+    margin-bottom: 25px;
+}
+
+/* Container da busca */
+.search-container {
+    position: relative;
+    width: 300px;
+    flex-shrink: 0; /* impede o campo de reduzir tamanho */
+}
+
+/* Campo de pesquisa */
+.search-input {
+    width: 100%;
+    height: 45px;
+    padding: 10px 40px 10px 15px;
+    border: 0.5px solid rgba(99, 99, 99, 0.3);
+    border-radius: 10px;
+    background: rgba(99, 99, 99, 0.05);
+    color: #ccc;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    outline: none;
+    backdrop-filter: blur(20px);
+}
+
+/* Ícone da lupa */
+.search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+}
+
+/* === BOTÃO "Adicionar Cliente" === */
+.addbotaocliente {
+  width: 202px;
+  height: 38px;
+  background: rgba(39, 200, 64, 0.05);
+  border: 0.5px solid rgba(39, 200, 64, 0.3);
+  box-shadow: 0px 147px 59px rgba(0, 0, 0, 0.01),
+              0px 83px 50px rgba(0, 0, 0, 0.05),
+              0px 37px 37px rgba(0, 0, 0, 0.09),
+              0px 9px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(75px);
+  border-radius: 10px;
+  color: rgba(39, 200, 64, 0.8);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.addbotaocliente:hover {
+  background: rgba(39, 200, 64, 0.1);
+  border-color: rgba(39, 200, 64, 0.5);
+}
+/* ======= TABELA / BLOCO ======= */
+.clientes-lista {
+    flex: 1; /* ocupa o resto do espaço */
+    background: rgba(99, 99, 99, 0.05);
+    border: 0.5px solid rgba(99, 99, 99, 0.3);
+    border-radius: 12px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(20px);
+    padding: 25px;
+    overflow-y: auto;
+
+    /* ESSENCIAL PRA CRESCER */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 0;
+}
+
+/* ======= ITENS ======= */
+.info-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #ccc;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(99, 99, 99, 0.2);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.value-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.editar-icon {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.editar-icon:hover {
+    opacity: 1;
+}
+
+
+
+
+
+
+#modalOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); 
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    box-sizing: border-box;
+    max-width: 1138px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+
+    background: #121212;
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0px 20px 50px rgba(0,0,0,0.5);
+
+    display: grid;
+
+    grid-template-columns: repeat(6, 1fr) 250px;
+    gap: 15px 20px; 
+    
+    align-items: start; 
+
+}
+
+
+.modal-content h2 {
+    grid-column: 1 / -1;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 28px;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+}
+
+
+.modal-content input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 55px; 
+    padding: 0 20px;
+    
+
+    background: #1E1E1E;
+    border: 1px solid #333;
+    border-radius: 12px; 
+    
+    color: #E0E0E0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.modal-content input:focus {
+    border-color: #555;
+    background: #252525;
+}
+
+.modal-content input::placeholder {
+    color: #666;
+}
+
+
+
+
+.span-half { grid-column: span 3; }
+
+
+.span-2 { grid-column: span 2; }
+
+
+.span-1 { grid-column: span 1; }
+
+
+.span-fixo { grid-column: span 3; } 
+
+
+.sidebar-container {
+    grid-column: 7 / 8; 
+    grid-row: 2 / 10;   
+    
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+}
+
+
+.camera-placeholder {
+    width: 100%;
+    aspect-ratio: 1 / 1; 
+    background: #1E1E1E;
+    border: 1px dashed #444; 
+    border-radius: 20px;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-bottom: auto; 
+}
+
+.camera-placeholder:hover {
+    border-color: #666;
+    background: #252525;
+}
+
+
+.camera-icon svg {
+    width: 60px;
+    height: 60px;
+    fill: #333; 
+    transition: 0.3s;
+}
+.camera-placeholder:hover .camera-icon svg {
+    fill: #555;
+}
+
+/* Botões Laterais */
+.modal-content button {
+    width: 100%;
+    height: 50px;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    transition: 0.2s;
+}
+
+/* Salvar  */
+#salvarCliente {
+    border: 1px solid #2ea043;
+    color: #2ea043;
+    box-shadow: inset 0 0 10px rgba(46, 160, 67, 0.1);
+}
+#salvarCliente:hover { background: rgba(46, 160, 67, 0.1); }
+
+/* Excluir  */
+#excluirCliente {
+    border: 1px solid #da3633;
+    color: #da3633;
+    box-shadow: inset 0 0 10px rgba(218, 54, 51, 0.1);
+}
+#excluirCliente:hover { background: rgba(218, 54, 51, 0.1); }
+
+/* Cancelar  */
+#fecharModalCancelar {
+    border: 1px solid #555;
+    color: #888;
+}
+#fecharModalCancelar:hover { border-color: #888; color: #fff; }
+
+@media (max-width: 900px) {
+    .modal-content {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar-container {
+        width: 100%;
+    }
+    .camera-placeholder {
+        width: 150px; 
+        margin: 0 auto;
+    }
+}
