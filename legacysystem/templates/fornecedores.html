@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes - Legacy System</title>
+    <title>Fornecedores - Legacy System</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fornecedores.css' %}">
 </head>
 <body>
     <div class="background-blobs"></div>
@@ -54,8 +54,8 @@
             </div>
         </aside>
 
-        <main class="clientes-main">
-            <h1>Clientes</h1>
+        <main class="fornecedores-main">
+            <h1>Fornecedores</h1>
 
             <div class="top-bar">
                 <div class="search-container">
@@ -63,10 +63,10 @@
                     <img src="{% static 'icons/lupa_icon.svg' %}" alt="Buscar" class="search-icon">
                 </div>
 
-                <button class="addbotaocliente">Adicionar Cliente</button>
+                <button class="addFornecedorButton">Adicionar Fornecedor</button>
             </div>
 
-            <div class="clientes-lista">
+            <div class="fornecedores-lista">
                 <div class="info-card">
                 </div>
             </div>
@@ -79,28 +79,27 @@
     <div id="modalOverlay" class="overlay">
         <div class="modal-content">
 
-            <h2>Novo cliente</h2>
+            <h2>Novo fornecedor</h2>
 
-            <input id="nome" type="text" class="span-half" placeholder="Nome completo">
-            <input id="email" type="email" class="span-half" placeholder="E-mail">
+            <input id="nomeFornecedor" type="text" class="span-half" placeholder="Nome">
+            <input id="emailFornecedor" type="email" class="span-half" placeholder="E-mail">
 
-            <input id="celular" type="tel" class="span-2" placeholder="Celular">
-            <input id="fixo" type="tel" class="span-fixo" placeholder="Telefone fixo">
-            <input id="cod" type="text" class="span-1" placeholder="COD">
+            <input id="celularFornecedor" type="text" class="span-2" placeholder="Celular">
+            <input id="fixoFornecedor" type="text" class="span-fixo" placeholder="Telefone fixo">
+            <input id="codFornecedor" type="text" class="span-1" placeholder="COD">
 
-            <input id="endereco" type="text" class="span-2" placeholder="Endereço">
-            <input id="cep" type="text" class="span-2" placeholder="CEP">
-            <input id="numero" type="text" class="span-1" placeholder="Nº">
-            <input id="uf" type="text" class="span-1" placeholder="UF">
+            <input id="enderecoFornecedor" type="text" class="span-2" placeholder="Endereço">
+            <input id="cepFornecedor" type="text" class="span-2" placeholder="CEP">
+            <input id="numeroFornecedor" type="text" class="span-1" placeholder="Nº">
+            <input id="ufFornecedor" type="text" class="span-1" placeholder="UF">
 
-            <input id="bairro" type="text" class="span-2" placeholder="Bairro">
-            <input id="cidade" type="text" class="span-2" placeholder="Cidade">
-            <input id="complemento" type="text" class="span-2" placeholder="Complemento">
+            <input id="bairroFornecedor" type="text" class="span-2" placeholder="Bairro">
+            <input id="cidadeFornecedor" type="text" class="span-2" placeholder="Cidade">
+            <input id="complementoFornecedor" type="text" class="span-2" placeholder="Complemento">
 
-            <input id="rg" type="text" class="span-half" placeholder="RG">
-            <input id="cpf" type="text" class="span-half" placeholder="CPF">
+            <input id="cnpjFornecedor" type="text" class="span-half" placeholder="CNPJ">
 
-            <input type="hidden" id="clienteID">
+            <input type="hidden" id="FornecedorID">
 
 
             <div class="sidebar-container">
@@ -114,8 +113,8 @@
                     </div>
                 </div>
 
-                <button id="salvarCliente">Salvar</button>
-                <button id="excluirCliente">Excluir</button>
+                <button id="salvarFornecedor">Salvar</button>
+                <button id="excluirFornecedor">Excluir</button>
                 <button id="fecharModalCancelar">Cancelar</button>
             </div>
 
@@ -123,6 +122,6 @@
     </div>
 
     <script src="{% static 'js/script.js' %}"></script>
-    <script src="{% static 'js/clientes_crud_script.js' %}"></script>
+    <script src="{% static 'js/fornecedores_crud_script.js' %}"></script>
 </body>
 </html>

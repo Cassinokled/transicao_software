@@ -26,7 +26,7 @@
                 <a href="{% url 'clientes' %}" class="item-nav {% if request.resolver_match.url_name == 'clientes' %}ativo{% endif %}" title="clientes">
                     <img src="{% static '/icons/clientes_icon_inativo.svg' %}" alt="clientes">
                 </a>
-                <a href="#fornecedores" class="item-nav {% if request.resolver_match.url_name == 'fornecedores' %}ativo{% endif %}" title="Fornecedores">
+                <a href="{% url 'fornecedores' %}" class="item-nav {% if request.resolver_match.url_name == 'fornecedores' %}ativo{% endif %}" title="Fornecedores">
                     <img src="{% static '/icons/fornecedores_icon_inativo.svg' %}" alt="Fornecedores">
                 </a>
                 <a href="#produtos" class="item-nav {% if request.resolver_match.url_name == 'produtos' %}ativo{% endif %}" title="Produtos">

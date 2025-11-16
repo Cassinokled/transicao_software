@@ -16,6 +16,9 @@ def perfil_view(request):
 def clientes_view(request):
     return render(request, 'clientes.html')
 
+def fornecedores_view(request):
+    return render(request, 'fornecedores.html')
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
