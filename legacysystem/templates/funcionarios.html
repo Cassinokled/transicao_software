@@ -4,10 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fornecedores - Legacy System</title>
+    <title>Funcoinarios - Legacy System</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/fornecedores.css' %}">
+    <link rel="stylesheet" href="{% static 'css/funcionarios.css' %}">
+
 </head>
 <body>
     <div class="background-blobs"></div>
@@ -34,8 +35,9 @@
                     <img src="{% static '/icons/produtos_icon_inativo.svg' %}" alt="Produtos">
                 </a>
                 <a href="{% url 'funcionarios' %}" class="item-nav {% if request.resolver_match.url_name == 'funcionarios' %}ativo{% endif %}" title="Funcionários">
-                 <img src="{% static '/icons/funcionarios_icon_inativo.svg' %}" alt="Funcionários">
+                <img src="{% static 'icons/funcionarios_icon_inativo.svg' %}" alt="Funcionários">
                 </a>
+
                 <a href="#vendas" class="item-nav" title="Vendas">
                     <img src="{% static '/icons/vendas_icon_inativo.svg' %}" alt="Vendas">
                 </a>
@@ -51,11 +53,12 @@
                 <a href="{% url 'logout' %}" class="item-nav" title="Sair">
                     <img src="{% static '/icons/sair_icon.svg' %}" alt="Sair">
                 </a>
+
             </div>
         </aside>
 
-        <main class="fornecedores-main">
-            <h1>Fornecedores</h1>
+        <main class="funcionarios-main">
+            <h1>Funcionarios</h1>
 
             <div class="top-bar">
                 <div class="search-container">
@@ -63,10 +66,10 @@
                     <img src="{% static 'icons/lupa_icon.svg' %}" alt="Buscar" class="search-icon">
                 </div>
 
-                <button class="addFornecedorButton">Adicionar Fornecedor</button>
+                <button class="addbotaoFuncionario">Adicionar Funcionario</button>
             </div>
 
-            <div class="fornecedores-lista">
+            <div class="funcionarios-lista">
                 <div class="info-card">
                 </div>
             </div>
@@ -76,30 +79,31 @@
     </div> <!-- fecha container-dashboard -->
 
 
-    <div id="modalOverlay" class="overlay">
+    <div id="modalOverlay">
         <div class="modal-content">
 
-            <h2>Novo fornecedor</h2>
+            <h2>Novo funcionario</h2>
 
-            <input id="nomeFornecedor" type="text" class="span-half" placeholder="Nome">
-            <input id="emailFornecedor" type="email" class="span-half" placeholder="E-mail">
+            <input id="nome" type="text" class="span-half" placeholder="Nome completo">
+            <input id="email" type="email" class="span-half" placeholder="E-mail">
 
-            <input id="celularFornecedor" type="text" class="span-2" placeholder="Celular">
-            <input id="fixoFornecedor" type="text" class="span-fixo" placeholder="Telefone fixo">
-            <input id="codFornecedor" type="text" class="span-1" placeholder="COD">
+            <input id="celular" type="tel" class="span-2" placeholder="Celular">
+            <input id="fixo" type="tel" class="span-fixo" placeholder="Telefone fixo">
+            <input id="cod" type="text" class="span-1" placeholder="COD">
 
-            <input id="enderecoFornecedor" type="text" class="span-2" placeholder="Endereço">
-            <input id="cepFornecedor" type="text" class="span-2" placeholder="CEP">
-            <input id="numeroFornecedor" type="text" class="span-1" placeholder="Nº">
-            <input id="ufFornecedor" type="text" class="span-1" placeholder="UF">
+            <input id="endereco" type="text" class="span-2" placeholder="Endereço">
+            <input id="cep" type="text" class="span-2" placeholder="CEP">
+            <input id="numero" type="text" class="span-1" placeholder="Nº">
+            <input id="uf" type="text" class="span-1" placeholder="UF">
 
-            <input id="bairroFornecedor" type="text" class="span-2" placeholder="Bairro">
-            <input id="cidadeFornecedor" type="text" class="span-2" placeholder="Cidade">
-            <input id="complementoFornecedor" type="text" class="span-2" placeholder="Complemento">
+            <input id="bairro" type="text" class="span-2" placeholder="Bairro">
+            <input id="cidade" type="text" class="span-2" placeholder="Cidade">
+            <input id="complemento" type="text" class="span-2" placeholder="Complemento">
 
-            <input id="cnpjFornecedor" type="text" class="span-half" placeholder="CNPJ">
+            <input id="rg" type="text" class="span-half" placeholder="RG">
+            <input id="cpf" type="text" class="span-half" placeholder="CPF">
 
-            <input type="hidden" id="FornecedorID">
+            <input type="hidden" id="funcionarioID">
 
 
             <div class="sidebar-container">
@@ -113,15 +117,16 @@
                     </div>
                 </div>
 
-                <button id="salvarFornecedor">Salvar</button>
-                <button id="excluirFornecedor">Excluir</button>
+                <button id="salvarFuncionario">Salvar</button>
+                <button id="excluirFuncionario">Excluir</button>
                 <button id="fecharModalCancelar">Cancelar</button>
             </div>
 
         </div>
     </div>
-
+    
     <script src="{% static 'js/script.js' %}"></script>
-    <script src="{% static 'js/fornecedores_crud_script.js' %}"></script>
+    <script src="{% static 'js/funcionario_crud_script.js' %}"></script>
+        
 </body>
 </html>
