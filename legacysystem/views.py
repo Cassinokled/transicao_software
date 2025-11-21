@@ -1,53 +1,208 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.contrib.auth.models import User
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth.models import User
 
-
-# Create your views here.
+# -----------------------------
+# VIEWS HTML (SITE)
+# -----------------------------
 
 def home(request):
     return render(request, 'home.html')
 
-def perfil_view(request):
-    return render(request, 'perfil.html')
-
-def clientes_view(request):
-    return render(request, 'clientes.html')
-
-def fornecedores_view(request):
-    return render(request, 'fornecedores.html')
-
 def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    
     if request.method == 'POST':
         email = request.POST.get('email')
-        password = request.POST.get('password')
-        
-        # busca por email
+        senha = request.POST.get('password')
+
         try:
             user_obj = User.objects.get(email=email)
-            user = authenticate(request, username=user_obj.username, password=password)
-            
-            if user is not None:
+            user = authenticate(request, username=user_obj.username, password=senha)
+
+            if user:
                 auth_login(request, user)
-                messages.success(request, f'Bem-vindo, {user.username}!')
                 return redirect('dashboard')
             else:
                 messages.error(request, 'Email ou senha incorretos.')
         except User.DoesNotExist:
             messages.error(request, 'Email ou senha incorretos.')
-    
+
     return render(request, 'login.html')
+
+def logout_view(request):
+    auth_logout(request)
+    return redirect('login')
 
 @login_required(login_url='login')
 def dashboard_view(request):
     return render(request, 'dashboard.html')
 
-def logout_view(request):
-    auth_logout(request)
-    messages.success(request, 'Logout realizado com sucesso!')
-    return redirect('home')
+@login_required(login_url='login')
+def perfil_view(request):
+    return render(request, 'perfil.html')
+
+@login_required(login_url='login')
+def clientes_view(request):
+    return render(request, 'clientes.html')
+
+@login_required(login_url='login')
+def fornecedores_view(request):
+    return render(request, 'fornecedores.html')
+
+@login_required(login_url='login')
+def funcionarios_view(request):
+    return render(request, 'funcionarios.html')
+
+# -----------------------------
+# API PARA CRUD DE CLIENTES
+# -----------------------------
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from .models import Cliente
+from .forms import ClienteForm
+
+def cliente_to_dict(cliente):
+    return {
+        "id": cliente.id,
+        "nome": cliente.nome,
+        "email": cliente.email,
+        "celular": cliente.celular,
+        "fixo": cliente.fixo,
+        "cod": cliente.cod,
+        "endereco": cliente.endereco,
+        "cep": cliente.cep,
+        "numero": cliente.numero,
+        "uf": cliente.uf,
+        "bairro": cliente.bairro,
+        "cidade": cliente.cidade,
+        "complemento": cliente.complemento,
+        "rg": cliente.rg,
+        "cpf": cliente.cpf,
+        "created_at": cliente.created_at.isoformat(),
+        "updated_at": cliente.updated_at.isoformat(),
+    }
+
+@require_http_methods(["GET"])
+def clientes_list(request):
+    clientes = Cliente.objects.order_by("cod")
+    data = [cliente_to_dict(c) for c in clientes]
+    return JsonResponse({"clientes": data})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def cliente_create(request):
+    data = json.loads(request.body.decode("utf-8"))
+    form = ClienteForm(data)
+    if form.is_valid():
+        cliente = form.save()
+        return JsonResponse({"cliente": cliente_to_dict(cliente)}, status=201)
+    return JsonResponse({"errors": form.errors}, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "PATCH"])
+def cliente_update(request, pk):
+    try:
+        cliente = Cliente.objects.get(pk=pk)
+    except Cliente.DoesNotExist:
+        return JsonResponse({"error": "Cliente not found"}, status=404)
+
+    data = json.loads(request.body.decode("utf-8"))
+    form = ClienteForm(data, instance=cliente)
+
+    if form.is_valid():
+        cliente = form.save()
+        return JsonResponse({"cliente": cliente_to_dict(cliente)})
+
+    return JsonResponse({"errors": form.errors}, status=400)
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def cliente_delete(request, pk):
+    try:
+        cliente = Cliente.objects.get(pk=pk)
+    except Cliente.DoesNotExist:
+        return JsonResponse({"error": "Cliente not found"}, status=404)
+
+    cliente.delete()
+    return JsonResponse({"deleted": True})
+
+
+
+# -----------------------------
+# API PARA CRUD DE FUNCIONÁRIOS
+# -----------------------------
+from .models import Funcionario
+from .forms import FuncionarioForm
+
+def funcionario_to_dict(func):
+    return {
+        "id": func.id,
+        "nome": func.nome,
+        "email": func.email,
+        "celular": func.celular,
+        "fixo": func.fixo,
+        "cod": func.cod,
+        "endereco": func.endereco,
+        "cep": func.cep,
+        "numero": func.numero,
+        "uf": func.uf,
+        "bairro": func.bairro,
+        "cidade": func.cidade,
+        "complemento": func.complemento,
+        "rg": func.rg,
+        "cpf": func.cpf,
+        "created_at": func.created_at.isoformat(),
+        "updated_at": func.updated_at.isoformat(),
+    }
+
+
+@require_http_methods(["GET"])
+def funcionarios_list(request):
+    funcionarios = Funcionario.objects.order_by("cod")
+    data = [funcionario_to_dict(f) for f in funcionarios]
+    return JsonResponse({"funcionarios": data})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def funcionario_create(request):
+    data = json.loads(request.body.decode("utf-8"))
+    form = FuncionarioForm(data)
+    if form.is_valid():
+        func = form.save()
+        return JsonResponse({"funcionario": funcionario_to_dict(func)}, status=201)
+    return JsonResponse({"errors": form.errors}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["PUT", "PATCH"])
+def funcionario_update(request, pk):
+    try:
+        func = Funcionario.objects.get(pk=pk)
+    except Funcionario.DoesNotExist:
+        return JsonResponse({"error": "Funcionario not found"}, status=404)
+
+    data = json.loads(request.body.decode("utf-8"))
+    form = FuncionarioForm(data, instance=func)
+
+    if form.is_valid():
+        func = form.save()
+        return JsonResponse({"funcionario": funcionario_to_dict(func)})
+
+    return JsonResponse({"errors": form.errors}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def funcionario_delete(request, pk):
+    try:
+        func = Funcionario.objects.get(pk=pk)
+    except Funcionario.DoesNotExist:
+        return JsonResponse({"error": "Funcionario not found"}, status=404)
+
+    func.delete()
+    return JsonResponse({"deleted": True})

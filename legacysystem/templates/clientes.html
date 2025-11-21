@@ -33,8 +33,8 @@
                 <a href="#produtos" class="item-nav" title="Produtos">
                     <img src="{% static '/icons/produtos_icon_inativo.svg' %}" alt="Produtos">
                 </a>
-                <a href="#funcionarios" class="item-nav" title="Funcionários">
-                    <img src="{% static '/icons/funcionarios_icon_inativo.svg' %}" alt="Funcionários">
+                <a href="{% url 'funcionarios' %}" class="item-nav {% if request.resolver_match.url_name == 'funcionarios' %}ativo{% endif %}" title="Funcionários">
+                 <img src="{% static '/icons/funcionarios_icon_inativo.svg' %}" alt="Funcionários">
                 </a>
                 <a href="#vendas" class="item-nav" title="Vendas">
                     <img src="{% static '/icons/vendas_icon_inativo.svg' %}" alt="Vendas">
