@@ -1,0 +1,151 @@
+/* Vendas styles (derived from produtos.css) */
+html, body { height:100%; margin:0; padding:0; }
+
+.vendas-main { min-height:100vh; display:flex; flex-direction:column; }
+.vendas-main h1 { font-family:'Poppins',sans-serif; font-size:28px; color:#fff; margin-bottom:20px; }
+
+.top-bar { display:flex; align-items:center; gap:15px; margin-bottom:18px; }
+.search-container { position:relative; width:300px; }
+.search-input { width:100%; height:42px; padding:10px 40px 10px 15px; border-radius:10px; background:rgba(99,99,99,0.05); border:0.5px solid rgba(99,99,99,0.3); color:#ccc; }
+.search-icon { position:absolute; right:12px; top:50%; transform:translateY(-50%); width:18px; height:18px; opacity:0.8; cursor:pointer; }
+
+.addbotaovenda { width:180px; height:38px; border-radius:10px; background:rgba(46,160,67,0.05); border:0.5px solid rgba(46,160,67,0.3); color:#2ea043; cursor:pointer; }
+
+.vendas-lista { background:rgba(99,99,99,0.05); border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,0.15); overflow:auto; }
+
+.vendas-table { width:100%; border-collapse:collapse; font-family:'Poppins',sans-serif; }
+.vendas-table thead th { text-align:left; padding:10px; font-size:14px; color:#ddd; border-bottom:1px solid rgba(99,99,99,0.15); }
+.vendas-table td { padding:12px 10px; color:#ccc; font-size:14px; vertical-align:middle; }
+.vendas-table td:nth-child(4) { text-align:right; }
+.vendas-table td:last-child { text-align:center; }
+
+/* linhas e separadores */
+.vendas-table tbody tr { border-bottom: 1px solid rgba(99,99,99,0.06); }
+.vendas-table tbody tr:hover { background: rgba(255,255,255,0.01); }
+
+/* número da venda */
+.vendas-table td:first-child { color: #bfbfbf; width: 110px; }
+
+/* status */
+.status-wrapper { display: inline-flex; align-items: center; gap:6px; }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.status-green { background: #29b057; }
+.status-orange { background: #ffb74d; }
+.status-red { background: #f55a5a; }
+.status-gray { background: #777; }
+
+/* ações */
+.acoes-btn { background: transparent; border: none; color: #cfcfcf; font-size: 16px; margin: 0 6px; cursor: pointer; padding:6px; border-radius:6px; }
+.acoes-btn:hover { background: rgba(255,255,255,0.03); color: #fff; }
+
+/* modal and fields reuse styles similar to produtos */
+.modal-content { box-sizing:border-box; max-width:980px; width:92%; background:rgba(18,18,18,0.96); border:1px solid rgba(255,255,255,0.03); border-radius:14px; padding:34px; display:grid; grid-template-columns:repeat(5,1fr); gap:14px 18px; align-items:start; grid-auto-rows: auto; box-shadow: 0 30px 80px rgba(0,0,0,0.65); }
+.modal-content h2 { grid-column:1/-1; color:#fff; font-size:30px; font-weight:700; margin-bottom:18px; }
+.modal-content .field { display:flex; flex-direction:column; gap:8px; }
+.modal-content input, .modal-content select { width:100%; height:46px; padding:0 14px; background:#181818; border:1px solid rgba(255,255,255,0.03); border-radius:12px; color:#e6e6e6; box-shadow: inset 0 1px 0 rgba(255,255,255,0.01); }
+.modal-content input:focus, .modal-content select:focus { outline: none; box-shadow: 0 0 0 3px rgba(46,160,67,0.07); border-color: rgba(46,160,67,0.22); }
+
+.modal-content .actions-row { margin-top:20px; display:flex; align-items:flex-start; gap:10px; }
+.modal-content button { width:100%; height:46px; border-radius:12px; background:transparent; border:1px solid #555; color:#ccc; cursor:pointer; }
+
+/* modal error */
+.modal-error { grid-column:1 / -1; background:rgba(218,54,51,0.06); border:1px solid rgba(218,54,51,0.18); color:#ffdddd; padding:10px 12px; border-radius:10px; display:none; gap:8px; }
+.modal-error-title { display:block; color:#ffefef; font-weight:700; margin-bottom:4px; }
+.modal-error-message { color:#ffdede; margin:0; font-size:13px; }
+
+@media (max-width:700px) { .modal-content { grid-template-columns:1fr; display:flex; flex-direction:column; } }
+
+/* Overlay específico para o modal de vendas (centraliza e previne corte) */
+#modalOverlayVenda {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0,0,0,0.7);
+	z-index: 1200;
+	justify-content: center;
+	align-items: center;
+	padding: 30px; /* garante espaçamento em telas pequenas */
+	box-sizing: border-box;
+	overflow: auto;
+}
+
+/* quando aberto o script define display:flex inline, certificamos que o conteúdo está centralizado */
+.modal-content {
+	max-height: 85vh;
+	overflow-y: auto;
+}
+
+/* garantir que modal-venda também respeite overflow e fique centralizado */
+.modal-venda {
+	align-self: center;
+}
+
+/* Venda modal specific layout */
+.modal-venda { max-width:1100px; grid-template-columns: 3fr 12px 1.6fr; display: grid; align-items: start; }
+.modal-content.modal-venda { grid-template-columns: 3fr 12px 1.6fr; }
+.modal-venda .left-col { padding-right:18px; grid-column: 1 / 2; }
+.modal-venda .col-separator { grid-column: 2 / 3; align-self: stretch; display:flex; justify-content:center; }
+.modal-venda .col-separator::before { content: ''; width:1px; background: rgba(255,255,255,0.04); align-self:stretch; border-radius:1px; }
+.modal-venda .right-col { padding-left:18px; grid-column: 3 / 4; }
+
+/* ensure left and right both start at top and have matching vertical rhythm */
+.modal-venda .left-col, .modal-venda .right-col { display:block; }
+
+.cliente-block .search-row { display:flex; gap:8px; align-items:center; }
+.cliente-block .search-row .search-input { flex:1; }
+.cliente-info { display:flex; gap:14px; margin-top:12px; align-items:center; }
+.cliente-text { color:#dcdcdc; }
+.cliente-nome { font-weight:700; font-size:16px; margin-bottom:6px; }
+.camera-placeholder { width:86px; height:86px; border-radius:10px; background:#1e1e1e; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#666; }
+
+.itens-block { margin-top:16px; }
+.itens-title { color:#cfcfcf; margin-bottom:10px; font-weight:600; }
+.itens-row { display:flex; gap:14px; align-items:end; }
+.prod-field { flex:1; }
+.qtd-field { width:110px; }
+.valor-field { width:150px; }
+.add-item-btn { margin-top:14px; padding:10px 18px; background:#163b1f; border:1px solid rgba(46,160,67,0.18); color:#cfeed0; border-radius:10px; cursor:pointer; box-shadow: 0 6px 14px rgba(12,58,28,0.35); }
+.add-item-btn:hover { filter:brightness(1.05); }
+
+/* date field row (input + picker button) */
+.date-field .date-input-row { display:flex; align-items:center; gap:8px; }
+.date-field .date-input-row input[type="date"] { flex:1; }
+.date-field .date-input-row input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) hue-rotate(180deg) brightness(0.9); }
+.date-picker-btn:hover { background:#252525; }
+
+.pagamento-block .pagamento-options { display:flex; gap:12px; margin-bottom:12px; color:#ccc; }
+
+/* reduzir e alinhar os rádios de pagamento */
+.modal-venda .pagamento-options label { display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+.modal-venda .pagamento-options input[type="radio"] {
+	width: 14px;
+	height: 14px;
+	margin: 0;
+	transform: none;
+	vertical-align: middle;
+	accent-color: #2ea043;
+}
+
+.totals-box { background: linear-gradient(180deg, rgba(16,16,16,0.9), rgba(24,24,24,0.9)); border:1px solid rgba(255,255,255,0.03); border-radius:12px; padding:14px; color:#dcdcdc; box-shadow: 0 8px 20px rgba(0,0,0,0.45); }
+.totals-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
+.totals-row.final { font-weight:700; padding-top:10px; }
+
+.modal-actions { grid-column:1 / -1; display:flex; gap:18px; justify-content:center; margin-top:18px; }
+.btn-save { border: 1px solid #2ea043; color: #2ea043; padding:10px 36px; border-radius:10px; font-weight:700; cursor:pointer; background: transparent; box-shadow: inset 0 0 10px rgba(46,160,67,0.08); }
+.btn-save:hover { background: rgba(46, 160, 67, 0.08); transform:none; }
+.btn-cancel { background:transparent; border:1px solid #555; color:#888; padding:10px 36px; border-radius:10px; cursor:pointer; }
+.btn-cancel:hover { border-color: #888; color: #fff; }
+.btn-delete { border:1px solid #da3633; color: #da3633; padding:10px 36px; border-radius:10px; cursor:pointer; background: transparent; box-shadow: inset 0 0 10px rgba(218,54,51,0.06); }
+.btn-delete:hover { background: rgba(218,54,51,0.08); }
+
+/* smaller button widths on narrow screens */
+@media (max-width:900px) { .modal-actions { gap:12px; } .btn-save, .btn-cancel, .btn-delete { padding:10px 20px; } }
+
+/* small responsive tweaks */
+@media (max-width:700px) {
+	.modal-venda { grid-template-columns: 1fr; }
+	.modal-venda .left-col, .modal-venda .right-col { padding:0; }
+}

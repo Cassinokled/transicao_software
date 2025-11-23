@@ -4,22 +4,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vendas - Legacy System</title>
-    <link rel="stylesheet" href="{% static '/css/base.css' %}">
+    <title>Dashboard - Vendas</title>
+    <link rel="stylesheet" href="{% static '/css/style.css' %}">
     <link rel="stylesheet" href="{% static '/css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static '/css/vendas.css' %}">
 </head>
 <body>
-    {% include 'background.html' %}
-
+    <div class="background-blobs"></div>
+    <div class="blob-extra"></div>
+    
     <div class="container-dashboard">
-        {% include 'sidebar.html' %}
+        <aside class="sidebar">
+            <a href="{% url 'home' %}" class="icone-home" title="Home">
+                <img src="{% static '/icons/home_icon.svg' %}" alt="Home">
+            </a>
 
+            <!-- barra de navegacao lateral -->
+            <nav class="sidebar-nav">
+                <a href="{% url 'dashboard' %}" class="item-nav {% if request.resolver_match.url_name == 'dashboard' %}ativo{% endif %}" title="Dashboard">
+                    <img src="{% static '/icons/dashboard_icon_ativo.svg' %}" alt="Dashboard">
+                </a>
+                <a href="{% url 'clientes' %}" class="item-nav {% if request.resolver_match.url_name == 'clientes' %}ativo{% endif %}" title="clientes">
+                    <img src="{% static '/icons/clientes_icon_inativo.svg' %}" alt="clientes">
+                </a>
+                <a href="#fornecedores" class="item-nav {% if request.resolver_match.url_name == 'fornecedores' %}ativo{% endif %}" title="Fornecedores">
+                    <img src="{% static '/icons/fornecedores_icon_inativo.svg' %}" alt="Fornecedores">
+                </a>
+                <a href="#produtos" class="item-nav {% if request.resolver_match.url_name == 'produtos' %}ativo{% endif %}" title="Produtos">
+                    <img src="{% static '/icons/produtos_icon_inativo.svg' %}" alt="Produtos">
+                </a>
+                <a href="#funcionarios" class="item-nav {% if request.resolver_match.url_name == 'funcionarios' %}ativo{% endif %}" title="Funcionários">
+                    <img src="{% static '/icons/funcionarios_icon_inativo.svg' %}" alt="Funcionários">
+                </a>
+                <a href="#vendas" class="item-nav {% if request.resolver_match.url_name == 'vendas' %}ativo{% endif %}" title="Vendas">
+                    <img src="{% static '/icons/vendas_icon_inativo.svg' %}" alt="Vendas">
+                </a>
+            </nav>
+            
+            <div class="sidebar-foot">
+                <a href="#notificacoes" class="item-nav" title="Notificações">
+                    <img src="{% static '/icons/notificacao_icon.svg' %}" alt="Notificações">
+                </a>
+                <a href="{% url 'perfil' %}" class="item-nav" title="Perfil">
+                    <img src="{% static '/icons/user_icon.svg' %}" alt="Perfil">
+                </a>
+                <a href="{% url 'logout' %}" class="item-nav" title="Sair">
+                    <img src="{% static '/icons/sair_icon.svg' %}" alt="Sair">
+                </a>
+            </div>
+        </aside>
+        
         <main>
-            <h1>Vendas</h1>
-            <p>Página em construção...</p>
+            <main class="vendas-main">
+                <h1>Vendas</h1>
+
+                <div class="top-bar">
+                    <div class="search-container">
+                        <input type="text" placeholder="Pesquisar" class="search-input">
+                        <img src="{% static '/icons/lupa_icon.svg' %}" alt="Buscar" class="search-icon">
+                    </div>
+
+                    <button type="button" class="addbotaovenda">Adicionar Venda</button>
+                </div>
+
+                <div class="vendas-lista">
+                    <table class="vendas-table">
+                        <thead>
+                            <tr>
+                                <th>N° da Venda</th>
+                                <th>Cliente</th>
+                                <th>Data</th>
+                                <th>Valor Total</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vendasTbody">
+                            <!-- linhas geradas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
         </main>
-    </div>
+
+        <!-- Modal: Nova Venda -->
+        <div id="modalOverlayVenda" class="overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modalVendaTitle">
+            <div class="modal-content modal-venda" role="document">
+                <h2 id="modalVendaTitle">Nova Venda</h2>
+
+                <div id="vendaError" class="modal-error" role="alert" aria-hidden="true">
+                    <strong class="modal-error-title">ATENÇÃO!</strong>
+                    <p id="vendaErrorMessage" class="modal-error-message"></p>
+                </div>
+
+                <!-- Left column: Cliente + Itens + upload -->
+                <div class="left-col">
+                    <div class="cliente-block">
+                        <label for="vendaClienteSearch">Cliente</label>
+                        <div class="search-row">
+                            <input id="vendaClienteSearch" type="text" placeholder="Buscar cliente" class="search-input">
+                            <img src="{% static '/icons/lupa_icon.svg' %}" alt="Buscar" class="search-icon">
+                        </div>
+
+                        <div class="cliente-info">
+                            <div class="cliente-text">
+                                <div class="cliente-nome">Maria Silva</div>
+                                <div class="cliente-contato">(44) 0000-0000</div>
+                                <div class="cliente-email">maria@gmail.com</div>
+                            </div>
+                            <div class="camera-placeholder">
+                                <div class="camera-icon">+</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="itens-block">
+                        <div class="itens-title">Itens</div>
+                        <div class="itens-row">
+                            <div class="field prod-field">
+                                <label for="vendaProdutoSelect">Produto</label>
+                                <select id="vendaProdutoSelect">
+                                    <option>Produto</option>
+                                </select>
+                            </div>
+                            <div class="field qtd-field">
+                                <label for="vendaItemQtd">Quantidade</label>
+                                <input id="vendaItemQtd" type="text" value="1">
+                            </div>
+                            <div class="field valor-field">
+                                <label for="vendaItemValorUnit">Valor Unitário</label>
+                                <input id="vendaItemValorUnit" type="text" placeholder="R$ 00,00">
+                            </div>
+                        </div>
+                        <button id="adicionarProdutoVenda" class="add-item-btn" type="button">Adicionar Produto</button>
+                    </div>
+                </div>
+
+                <!-- visual separator -->
+                <div class="col-separator" aria-hidden="true"></div>
+
+                <!-- Right column: Pagamento + Totais -->
+                <div class="right-col">
+                    <div class="pagamento-block">
+                        <div class="pagamento-title">Pagamento</div>
+                        <div class="pagamento-options">
+                            <label><input type="radio" name="pagamentoTipo" value="avista" checked> À vista</label>
+                            <label><input type="radio" name="pagamentoTipo" value="parcelado"> Parcelado</label>
+                        </div>
+
+                        <div class="field">
+                            <label for="formaPagamento">Forma de pagamento:</label>
+                            <select id="formaPagamento">
+                                <option>Cartão</option>
+                                <option>Dinheiro</option>
+                            </select>
+                        </div>
+
+                        <div class="field date-field">
+                            <label for="vendaData">Data da venda:</label>
+                            <div class="date-input-row">
+                                <input id="vendaData" type="date">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="totals-block">
+                        <div class="totals-box">
+                            <div class="totals-row"><span>Total de itens</span><span id="totalItens">R$ 0,00</span></div>
+                            <div class="totals-row"><span>Valor total</span><span id="totalVenda">R$ 0,00</span></div>
+                            <div class="totals-row"><span>Descontos</span><span id="descontos">R$ 0,00</span></div>
+                            <div class="totals-row final"><span>Valor final</span><span id="valorFinal">R$ 0,00</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer actions full-width -->
+                <div class="modal-actions">
+                    <button id="salvarVenda" class="btn-save" type="button">Salvar</button>
+                    <button id="fecharModalVendaCancelar" class="btn-cancel" type="button">Cancelar</button>
+                    <button id="excluirVenda" class="btn-delete" type="button">Excluir</button>
+                </div>
+
+                <input type="hidden" id="vendaID">
+            </div>
+        </div>
+
+    </div> <!-- /container-dashboard -->
 
     <script src="{% static '/js/script.js' %}"></script>
+    <script src="{% static '/js/vendas_crud_script.js' %}"></script>
 </body>
 </html>
