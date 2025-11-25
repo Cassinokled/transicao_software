@@ -59,15 +59,10 @@
                 <p id="produtoErrorMessage" class="modal-error-message"></p>
             </div>
 
-            <!-- Primeira linha: Descrição (sp3), Quantidade (sp1), Valor unitário (sp1) -->
+            <!-- Primeira linha: Descrição (sp3), Valor unitário (sp1), Estoque inicial (sp1) -->
             <div class="field span-3">
                 <label for="produtoDescricao">Descrição</label>
                 <input id="produtoDescricao" type="text" placeholder="Descrição">
-            </div>
-
-            <div class="field span-1">
-                <label for="produtoQtd">Quantidade</label>
-                <input id="produtoQtd" type="text" placeholder="Quantidade">
             </div>
 
             <div class="field span-1">
@@ -75,14 +70,20 @@
                 <input id="produtoValorUnitario" type="text" placeholder="Valor unitário">
             </div>
 
-            <!-- Segunda linha: Estoque atual, CÓD, Salvar, Cancelar, Excluir -->
-            <div class="field span-1">
-                <label for="produtoEstoque">Estoque atual</label>
-                <input id="produtoEstoque" type="text" placeholder="Estoque atual">
+            <div class="field span-1" id="fieldEstoqueInicial">
+                <label for="produtoEstoque">Estoque inicial</label>
+                <input id="produtoEstoque" type="text" placeholder="Estoque inicial">
             </div>
 
+            <!-- Campo quantidade para adicionar ao estoque (somente em edição) -->
+            <div class="field span-1" id="fieldQuantidade" style="display: none;">
+                <label for="produtoQtd">Quantidade a adicionar</label>
+                <input id="produtoQtd" type="text" placeholder="Quantidade">
+            </div>
+
+            <!-- Segunda linha: CÓD, Salvar, Cancelar, Excluir -->
             <div class="field span-1">
-                <label for="produtoCod">CÓD</label>
+                <label for="produtoCod">Código</label>
                 <input id="produtoCod" type="text" placeholder="CÓD">
             </div>
 
@@ -102,6 +103,9 @@
         </div>
     </div>
 
+    <script>
+        window.CSRF_TOKEN = "{{ csrf_token }}";
+    </script>
     <script src="{% static '/js/script.js' %}"></script>
     <script src="{% static '/js/produtos_crud_script.js' %}"></script>
 </body>

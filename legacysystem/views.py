@@ -311,3 +311,65 @@ def exportar_clientes_csv(request):
         writer.writerow([cliente.id, cliente.nome, cliente.email, cliente.celular]) 
         
     return response
+# API PRODUTOS
+from .models import Produto
+from .forms import ProdutoForm
+
+def produto_to_dict(prod):
+    return {
+        "id": prod.id,
+        "descricao": prod.descricao,
+        "cod": prod.cod,
+        "valorUnitario": float(prod.valorUnitario),
+        "estoque": prod.estoque,
+        "created_at": prod.created_at.isoformat(),
+        "updated_at": prod.updated_at.isoformat(),
+    }
+
+
+@require_http_methods(["GET"])
+def produtos_list(request):
+    produtos = Produto.objects.order_by("cod")
+    data = [produto_to_dict(p) for p in produtos]
+    return JsonResponse({"produtos": data})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def produto_create(request):
+    data = json.loads(request.body.decode("utf-8"))
+    form = ProdutoForm(data)
+    if form.is_valid():
+        prod = form.save()
+        return JsonResponse({"produto": produto_to_dict(prod)}, status=201)
+    return JsonResponse({"errors": form.errors}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["PUT", "PATCH"])
+def produto_update(request, pk):
+    try:
+        prod = Produto.objects.get(pk=pk)
+    except Produto.DoesNotExist:
+        return JsonResponse({"error": "Produto not found"}, status=404)
+
+    data = json.loads(request.body.decode("utf-8"))
+    form = ProdutoForm(data, instance=prod)
+
+    if form.is_valid():
+        prod = form.save()
+        return JsonResponse({"produto": produto_to_dict(prod)})
+
+    return JsonResponse({"errors": form.errors}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def produto_delete(request, pk):
+    try:
+        prod = Produto.objects.get(pk=pk)
+    except Produto.DoesNotExist:
+        return JsonResponse({"error": "Produto not found"}, status=404)
+
+    prod.delete()
+    return JsonResponse({"deleted": True})
