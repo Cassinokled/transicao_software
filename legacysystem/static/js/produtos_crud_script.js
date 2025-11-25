@@ -23,10 +23,86 @@ document.addEventListener("DOMContentLoaded", () => {
     let ultimoId = Date.now();
 
     const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    const API_BASE = "/api/produtos/";
 
     function safeNumber(value) {
         const n = parseFloat(value.replace(/,/g, '.'));
         return isNaN(n) ? 0 : n;
+    }
+
+    // helper
+    function getCsrfToken() {
+        if (window.CSRF_TOKEN) return window.CSRF_TOKEN;
+        const m = document.querySelector('meta[name="csrf-token"]');
+        return m ? m.getAttribute('content') : '';
+    }
+
+    function fetchJson(url, options = {}) {
+        const headers = options.headers || {};
+        headers['Content-Type'] = 'application/json';
+        const csrf = getCsrfToken();
+        if (csrf) headers['X-CSRFToken'] = csrf;
+        options.headers = headers;
+        return fetch(url, options).then(resp => {
+            if (!resp.ok) return resp.json().then(err => Promise.reject({status: resp.status, body: err}));
+            return resp.json();
+        });
+    }
+
+    // carrega produtos back
+    function carregarProdutos() {
+        fetch(API_BASE)
+            .then(res => res.json())
+            .then(data => {
+                if (listaProdutos) listaProdutos.innerHTML = '';
+                data.produtos.forEach(p => {
+                    adicionarProdutoNaListaDOM(p);
+                });
+            })
+            .catch(err => {
+                console.error('Erro ao carregar produtos', err);
+            });
+    }
+
+    function adicionarProdutoNaListaDOM(dadosProduto) {
+        const tr = document.createElement('tr');
+        tr.dataset.id = dadosProduto.id;
+        tr.produtoData = dadosProduto;
+
+        const tdDescricao = document.createElement('td');
+        tdDescricao.textContent = dadosProduto.descricao;
+
+        const tdCod = document.createElement('td');
+        tdCod.textContent = dadosProduto.cod;
+
+        const tdEstoque = document.createElement('td');
+        tdEstoque.textContent = dadosProduto.estoque;
+
+        const tdValor = document.createElement('td');
+        tdValor.textContent = currencyFormatter.format(Number(dadosProduto.valorUnitario) || 0);
+
+        const tdAcoes = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'editar-btn';
+        editBtn.title = 'Editar';
+        const editIcon = document.createElement('img');
+        editIcon.src = '/static/icons/editar_icon.svg';
+        editIcon.alt = 'Editar';
+        editIcon.className = 'editar-btn-icon';
+        editIcon.width = 18;
+        editIcon.height = 18;
+        editBtn.appendChild(editIcon);
+        editBtn.addEventListener('click', () => abrirEdicao(dadosProduto.id));
+        tdAcoes.appendChild(editBtn);
+
+        tr.appendChild(tdDescricao);
+        tr.appendChild(tdCod);
+        tr.appendChild(tdEstoque);
+        tr.appendChild(tdValor);
+        tr.appendChild(tdAcoes);
+
+        if (listaProdutos) listaProdutos.appendChild(tr);
     }
 
     // abrir o modal
@@ -35,9 +111,38 @@ document.addEventListener("DOMContentLoaded", () => {
             modoEdicao = false;
             produtoEditandoID = null;
             limparInputs();
+            configurarModalCriar();
             if (campos.cod) campos.cod.value = gerarCodAutomatico();
             abrirModal();
         });
+    }
+
+    function configurarModalCriar() {
+        const modalTitle = document.querySelector('#modalProdutoTitle');
+        const fieldEstoque = document.querySelector('#fieldEstoqueInicial');
+        const fieldQtd = document.querySelector('#fieldQuantidade');
+        
+        if (modalTitle) modalTitle.textContent = 'Novo produto';
+        if (fieldEstoque) fieldEstoque.style.display = '';
+        if (fieldQtd) fieldQtd.style.display = 'none';
+        if (campos.cod) campos.cod.disabled = false;
+        if (campos.estoque) campos.estoque.disabled = false;
+        if (salvarButton) salvarButton.textContent = 'Salvar';
+        if (excluirButton) excluirButton.style.display = '';
+    }
+
+    function configurarModalEdicao() {
+        const modalTitle = document.querySelector('#modalProdutoTitle');
+        const fieldEstoque = document.querySelector('#fieldEstoqueInicial');
+        const fieldQtd = document.querySelector('#fieldQuantidade');
+        
+        if (modalTitle) modalTitle.textContent = 'Adicionar ao estoque';
+        if (fieldEstoque) fieldEstoque.style.display = 'none';
+        if (fieldQtd) fieldQtd.style.display = '';
+        if (campos.cod) campos.cod.disabled = true;
+        if (campos.qtd) campos.qtd.value = '';
+        if (salvarButton) salvarButton.textContent = 'Adicionar';
+        if (excluirButton) excluirButton.style.display = '';
     }
 
     function abrirModal() {
@@ -70,96 +175,53 @@ document.addEventListener("DOMContentLoaded", () => {
         const descricao = campos.descricao?.value.trim() ?? '';
         const codRaw = campos.cod?.value.trim() ?? '';
         const cod = codRaw || gerarCodAutomatico();
-
-        // validar que todos os campos foram preenchidos
-        const codRawCheck = campos.cod?.value.trim() ?? '';
-        const valorRawCheck = campos.valorUnitario?.value.trim() ?? '';
-        const qtdRawCheck = campos.qtd?.value.trim() ?? '';
-        const estoqueRawCheck = campos.estoque?.value.trim() ?? '';
-
-        if (!descricao || !codRawCheck || !valorRawCheck || !qtdRawCheck || !estoqueRawCheck) {
-            if (produtoErrorMessage) produtoErrorMessage.textContent = 'Preenchimento de todos os campos é obrigatório.';
-            if (produtoError) { produtoError.style.display = 'block'; produtoError.setAttribute('aria-hidden','false'); }
-            return;
-        }
-
-        // validador: CÓD deve ser único (exceto no caso de editar o próprio produto)
-        function codigoExiste(codToCheck, ignoreId) {
-            if (!codToCheck) return false;
-            const rows = document.querySelectorAll('tr[data-id]');
-            for (const row of rows) {
-                const id = row.dataset.id;
-                if (ignoreId && String(ignoreId) === String(id)) continue;
-                const existingCod = String(row.produtoData?.cod ?? '');
-                if (existingCod.trim() === String(codToCheck).trim()) return true;
-            }
-            return false;
-        }
-
-        const ignoreId = modoEdicao ? produtoEditandoID : null;
-        if (codigoExiste(cod, ignoreId)) {
-            if (produtoErrorMessage) produtoErrorMessage.textContent = 'Já existe um produto com esse código. Escolha outro código.';
-            if (produtoError) { produtoError.style.display = 'block'; produtoError.setAttribute('aria-hidden','false'); }
-            return;
-        }
+        const valorRaw = campos.valorUnitario?.value.trim() ?? '';
 
         if (modoEdicao) {
-            atualizarProduto(produtoEditandoID);
-        } else {
-            criarProduto({
-                id: ++ultimoId,
-                descricao: descricao,
-                cod: cod,
-                valorUnitario: safeNumber(campos.valorUnitario?.value.trim() ?? ''),
-                qtd: campos.qtd?.value.trim() ?? '',
-                estoque: campos.estoque?.value.trim() ?? ''
-            });
-        }
+            // Modo edição: validar quantidade a adicionar
+            const qtdRaw = campos.qtd?.value.trim() ?? '';
+            
+            if (!descricao || !valorRaw || !qtdRaw) {
+                if (produtoErrorMessage) produtoErrorMessage.textContent = 'Preenchimento de todos os campos é obrigatório.';
+                if (produtoError) { produtoError.style.display = 'block'; produtoError.setAttribute('aria-hidden','false'); }
+                return;
+            }
 
-        fecharModal();
+            adicionarEstoqueAPI(produtoEditandoID);
+        } else {
+            // Modo criar: validar estoque inicial
+            const estoqueRaw = campos.estoque?.value.trim() ?? '';
+            
+            if (!descricao || !cod || !valorRaw || !estoqueRaw) {
+                if (produtoErrorMessage) produtoErrorMessage.textContent = 'Preenchimento de todos os campos é obrigatório.';
+                if (produtoError) { produtoError.style.display = 'block'; produtoError.setAttribute('aria-hidden','false'); }
+                return;
+            }
+
+            criarProdutoAPI();
+        }
     });
 
-    // criar produto (DOM-safe) — adiciona uma linha (<tr>) na tabela
-    function criarProduto(dadosProduto) {
-        const tr = document.createElement('tr');
-        tr.dataset.id = dadosProduto.id;
-        tr.produtoData = dadosProduto; // armazenamento temporário
+    // criar produto no backend
+    function criarProdutoAPI() {
+        const payload = {
+            descricao: campos.descricao.value.trim(),
+            cod: campos.cod.value.trim(),
+            valorUnitario: safeNumber(campos.valorUnitario?.value.trim() ?? ''),
+            estoque: parseInt(campos.estoque.value.trim(), 10) || 0
+        };
 
-        const tdDescricao = document.createElement('td');
-        tdDescricao.textContent = dadosProduto.descricao;
-
-        const tdCod = document.createElement('td');
-        tdCod.textContent = dadosProduto.cod;
-
-        const tdEstoque = document.createElement('td');
-        tdEstoque.textContent = dadosProduto.estoque;
-
-        const tdValor = document.createElement('td');
-        tdValor.textContent = currencyFormatter.format(Number(dadosProduto.valorUnitario) || 0);
-
-        const tdAcoes = document.createElement('td');
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'editar-btn';
-        editBtn.title = 'Editar';
-        // usar ícone em vez de texto
-        const editIcon = document.createElement('img');
-        editIcon.src = '/static/icons/editar_icon.svg';
-        editIcon.alt = 'Editar';
-        editIcon.className = 'editar-btn-icon';
-        editIcon.width = 18;
-        editIcon.height = 18;
-        editBtn.appendChild(editIcon);
-        editBtn.addEventListener('click', () => abrirEdicao(dadosProduto.id));
-        tdAcoes.appendChild(editBtn);
-
-        tr.appendChild(tdDescricao);
-        tr.appendChild(tdCod);
-        tr.appendChild(tdEstoque);
-        tr.appendChild(tdValor);
-        tr.appendChild(tdAcoes);
-
-        if (listaProdutos) listaProdutos.appendChild(tr);
+        fetchJson(API_BASE + "create/", {
+            method: "POST",
+            body: JSON.stringify(payload)
+        }).then(data => {
+            adicionarProdutoNaListaDOM(data.produto);
+            fecharModal();
+        }).catch(err => {
+            console.error(err);
+            if (produtoErrorMessage) produtoErrorMessage.textContent = 'Erro ao criar produto';
+            if (produtoError) { produtoError.style.display = 'block'; produtoError.setAttribute('aria-hidden','false'); }
+        });
     }
 
     function abrirEdicao(id) {
@@ -170,36 +232,49 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!tr || !tr.produtoData) return;
         const dados = tr.produtoData;
 
+        // Preencher campos
         if (campos.cod) campos.cod.value = dados.cod ?? '';
         if (campos.valorUnitario) {
             campos.valorUnitario.value = (typeof dados.valorUnitario === 'number') ? dados.valorUnitario.toFixed(2).replace('.', ',') : (dados.valorUnitario ?? '');
         }
-        campos.qtd.value = dados.qtd ?? '';
-        if (campos.estoque) campos.estoque.value = dados.estoque ?? '';
         campos.descricao.value = dados.descricao ?? '';
-
+        
+        // Configurar modal para edição (adicionar ao estoque)
+        configurarModalEdicao();
         abrirModal();
     }
 
-    function atualizarProduto(id) {
+    function adicionarEstoqueAPI(id) {
         const tr = document.querySelector(`tr[data-id="${id}"]`);
         if (!tr || !tr.produtoData) return;
-        const dados = tr.produtoData;
-
-        dados.descricao = campos.descricao.value.trim();
-        // garantir que valorUnitario esteja armazenado como número
-        dados.valorUnitario = safeNumber(campos.valorUnitario?.value.trim() ?? '');
-        dados.cod = (campos.cod?.value.trim()) ?? dados.cod;
-        dados.valorUnitario = (campos.valorUnitario?.value.trim()) ?? dados.valorUnitario;
-        dados.qtd = campos.qtd.value.trim();
-        dados.estoque = (campos.estoque?.value.trim()) ?? dados.estoque;
         
+        const qtdAdicionar = parseInt(campos.qtd.value.trim(), 10) || 0;
+        const estoqueAtual = tr.produtoData.estoque || 0;
+        const novoEstoque = estoqueAtual + qtdAdicionar;
 
-        const tds = tr.querySelectorAll('td');
-        if (tds[0]) tds[0].textContent = dados.descricao;
-        if (tds[1]) tds[1].textContent = dados.cod;
-        if (tds[2]) tds[2].textContent = dados.estoque;
-        if (tds[3]) tds[3].textContent = currencyFormatter.format(Number(dados.valorUnitario) || 0);
+        const payload = {
+            descricao: campos.descricao.value.trim(),
+            cod: campos.cod.value.trim(),
+            valorUnitario: safeNumber(campos.valorUnitario?.value.trim() ?? ''),
+            estoque: novoEstoque
+        };
+
+        fetchJson(API_BASE + id + "/", {
+            method: "PUT",
+            body: JSON.stringify(payload)
+        }).then(data => {
+            tr.produtoData = data.produto;
+            const tds = tr.querySelectorAll('td');
+            if (tds[0]) tds[0].textContent = data.produto.descricao;
+            if (tds[1]) tds[1].textContent = data.produto.cod;
+            if (tds[2]) tds[2].textContent = data.produto.estoque;
+            if (tds[3]) tds[3].textContent = currencyFormatter.format(Number(data.produto.valorUnitario) || 0);
+            fecharModal();
+        }).catch(err => {
+            console.error(err);
+            if (produtoErrorMessage) produtoErrorMessage.textContent = 'Erro ao adicionar ao estoque';
+            if (produtoError) { produtoError.style.display = 'block'; produtoError.setAttribute('aria-hidden','false'); }
+        });
     }
 
     // busca/filtragem da lista de produtos: executa somente ao clicar na lupa
@@ -225,9 +300,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // excluir produto
     if (excluirButton) excluirButton.addEventListener('click', () => {
         if (!modoEdicao) return;
-        const tr = document.querySelector(`tr[data-id="${produtoEditandoID}"]`);
-        if (tr) tr.remove();
-        fecharModal();
+        
+        fetchJson(API_BASE + produtoEditandoID + "/", {
+            method: "DELETE"
+        }).then(() => {
+            const tr = document.querySelector(`tr[data-id="${produtoEditandoID}"]`);
+            if (tr) tr.remove();
+            fecharModal();
+        }).catch(err => {
+            console.error(err);
+            alert('Erro ao excluir produto');
+        });
     });
 
     function gerarCodAutomatico() {
@@ -287,7 +370,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ordem esperada dentro do modal
-    enableEnterAdvance(['#produtoDescricao', '#produtoQtd', '#produtoValorUnitario', '#produtoEstoque', '#produtoCod']);
+    // ordem esperada dentro do modal (criar)
+    enableEnterAdvance(['#produtoDescricao', '#produtoValorUnitario', '#produtoEstoque', '#produtoCod']);
+
+    // carregar produtos ao iniciar
+    carregarProdutos();
 
 });

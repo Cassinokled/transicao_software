@@ -17,6 +17,11 @@ urlpatterns = [
     path("fornecedores/<int:pk>/", views.fornecedor_update, name='fornecedor_update'),
     path("fornecedores/<int:pk>/delete/", views.fornecedor_delete, name='fornecedor_delete'),
 
+    path("produtos/", views.produtos_list, name='produtos_list'),
+    path("produtos/create/", views.produto_create, name='produto_create'),
+    path("produtos/<int:pk>/", views.produto_update, name='produto_update'),
+    path("produtos/<int:pk>/delete/", views.produto_delete, name='produto_delete'),
+
 ]
 
 
