@@ -141,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const item = listaEl.querySelector(`[data-id="${id}"]`);
     const dados = item.dados;
     preencherFormulario(dados);
+    campos.cod.readOnly = true;
     abrirModal();
   }
 
@@ -252,6 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
     funcionarioEditandoID = null;
     limparFormulario();
     campos.cod.value = gerarCodAutomatico();
+    campos.cod.readOnly = true;
     abrirModal();
   });
 
