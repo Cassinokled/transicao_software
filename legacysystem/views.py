@@ -44,7 +44,18 @@ def dashboard_view(request):
 
 @login_required(login_url='login')
 def perfil_view(request):
-    return render(request, 'perfil.html')
+    user = request.user
+    try:
+        funcionario = Funcionario.objects.get(email=user.email)
+        context = {
+            'user': user,
+            'funcionario': funcionario,
+        }
+    except Funcionario.DoesNotExist:
+        context = {
+            'user': user,
+        }
+    return render(request, 'perfil.html', context)
 
 @login_required(login_url='login')
 def clientes_view(request):
@@ -524,3 +535,27 @@ def venda_detail(request, pk):
         return JsonResponse({"venda": venda_to_dict(venda)})
     except Venda.DoesNotExist:
         return JsonResponse({"error": "Venda not found"}, status=404)
+
+@csrf_exempt
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        user = request.user
+        if not user.check_password(old_password):
+            return JsonResponse({'error': 'Senha antiga incorreta'}, status=400)
+        
+        if new_password != confirm_password:
+            return JsonResponse({'error': 'As senhas não coincidem'}, status=400)
+        
+        if len(new_password) < 8:
+            return JsonResponse({'error': 'A nova senha deve ter pelo menos 8 caracteres'}, status=400)
+        
+        user.set_password(new_password)
+        user.save()
+        return JsonResponse({'success': 'Senha alterada com sucesso'})
+    
+    return JsonResponse({'error': 'Método não permitido'}, status=405)

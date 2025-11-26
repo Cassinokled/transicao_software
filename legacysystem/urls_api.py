@@ -27,6 +27,8 @@ urlpatterns = [
     path("vendas/<int:pk>/", views.venda_detail, name='venda_detail'),
     path("vendas/<int:pk>/update/", views.venda_update, name='venda_update'),
 
+    path("change-password/", views.change_password, name='change_password'),
+
 ]
 
 
