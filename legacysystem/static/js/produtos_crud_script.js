@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let modoEdicao = false;
     let produtoEditandoID = null;
     let ultimoId = Date.now();
+    let todosProdutos = [];
+    let paginaAtual = 1;
+    const itensPorPagina = 10;
 
     const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
     const API_BASE = "/api/produtos/";
@@ -54,14 +57,45 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch(API_BASE)
             .then(res => res.json())
             .then(data => {
-                if (listaProdutos) listaProdutos.innerHTML = '';
-                data.produtos.forEach(p => {
-                    adicionarProdutoNaListaDOM(p);
-                });
+                todosProdutos = data.produtos || [];
+                exibirPagina(1);
             })
             .catch(err => {
                 console.error('Erro ao carregar produtos', err);
             });
+    }
+
+    function exibirPagina(pagina) {
+        if (listaProdutos) listaProdutos.innerHTML = '';
+        paginaAtual = pagina;
+
+        const inicio = (pagina - 1) * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+
+        const itensPagina = todosProdutos.slice(inicio, fim);
+
+        itensPagina.forEach(p => adicionarProdutoNaListaDOM(p));
+
+        criarBotoesPaginacao();
+    }
+
+    function criarBotoesPaginacao() {
+        const totalPaginas = Math.ceil(todosProdutos.length / itensPorPagina);
+        let container = document.querySelector('#paginationControls');
+
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = i;
+            btn.classList.add('pagina-btn');
+            if (i === paginaAtual) btn.classList.add('ativa');
+
+            btn.addEventListener('click', () => exibirPagina(i));
+            container.appendChild(btn);
+        }
     }
 
     function adicionarProdutoNaListaDOM(dadosProduto) {

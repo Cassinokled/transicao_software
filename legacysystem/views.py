@@ -373,3 +373,154 @@ def produto_delete(request, pk):
 
     prod.delete()
     return JsonResponse({"deleted": True})
+
+
+# -----------------------------
+# API PARA CRUD DE VENDAS
+# -----------------------------
+from django.db import transaction
+from .models import Venda, ItemVenda
+from .forms import VendaForm, ItemVendaForm
+
+def venda_to_dict(venda):
+    return {
+        "id": venda.id,
+        "cliente_id": venda.cliente.id,
+        "cliente_nome": venda.cliente.nome,
+        "data_venda": venda.data_venda.isoformat(),
+        "forma_pagamento": venda.forma_pagamento,
+        "valor_total": float(venda.valor_total),
+        "desconto": float(venda.desconto),
+        "valor_final": float(venda.valor_final),
+        "status": venda.status,
+        "itens": [item_to_dict(item) for item in venda.itens.all()],
+        "created_at": venda.created_at.isoformat(),
+        "updated_at": venda.updated_at.isoformat(),
+    }
+
+def item_to_dict(item):
+    return {
+        "id": item.id,
+        "produto_id": item.produto.id,
+        "produto_descricao": item.produto.descricao,
+        "produto_cod": item.produto.cod,
+        "quantidade": item.quantidade,
+        "valor_unitario": float(item.valor_unitario),
+        "subtotal": float(item.subtotal),
+    }
+
+
+@require_http_methods(["GET"])
+def vendas_list(request):
+    vendas = Venda.objects.select_related('cliente').prefetch_related('itens__produto').order_by('-data_venda', '-id')
+    data = [venda_to_dict(v) for v in vendas]
+    return JsonResponse({"vendas": data})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def venda_create(request):
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        
+        # Validar dados da venda
+        venda_data = {
+            'cliente': data.get('cliente_id'),
+            'data_venda': data.get('data_venda'),
+            'forma_pagamento': data.get('forma_pagamento', 'Dinheiro'),
+            'desconto': data.get('desconto', 0),
+            'status': data.get('status', 'Concluída'),
+        }
+        
+        venda_form = VendaForm(venda_data)
+        if not venda_form.is_valid():
+            return JsonResponse({"errors": venda_form.errors}, status=400)
+        
+        # Validar itens
+        itens_data = data.get('itens', [])
+        if not itens_data:
+            return JsonResponse({"error": "A venda deve ter pelo menos um item"}, status=400)
+        
+        # Validar estoque antes de criar a venda
+        erros_estoque = []
+        for item_data in itens_data:
+            produto_id = item_data.get('produto_id')
+            quantidade = int(item_data.get('quantidade', 0))
+            
+            try:
+                produto = Produto.objects.get(id=produto_id)
+                if produto.estoque < quantidade:
+                    erros_estoque.append(
+                        f"Produto '{produto.descricao}' possui apenas {produto.estoque} unidade(s) em estoque. Solicitado: {quantidade}"
+                    )
+            except Produto.DoesNotExist:
+                return JsonResponse({"error": f"Produto com ID {produto_id} não encontrado"}, status=404)
+        
+        if erros_estoque:
+            return JsonResponse({"error": "Estoque insuficiente", "detalhes": erros_estoque}, status=400)
+        
+        # Criar venda e itens em uma transação
+        with transaction.atomic():
+            venda = venda_form.save()
+            
+            for item_data in itens_data:
+                produto_id = item_data.get('produto_id')
+                quantidade = int(item_data.get('quantidade'))
+                valor_unitario = float(item_data.get('valor_unitario'))
+                
+                produto = Produto.objects.select_for_update().get(id=produto_id)
+                
+                # Criar item da venda
+                ItemVenda.objects.create(
+                    venda=venda,
+                    produto=produto,
+                    quantidade=quantidade,
+                    valor_unitario=valor_unitario
+                )
+                
+                # Diminuir estoque
+                produto.estoque -= quantidade
+                produto.save()
+            
+            # Calcular totais
+            venda.calcular_totais()
+        
+        return JsonResponse({"venda": venda_to_dict(venda)}, status=201)
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["PUT", "PATCH"])
+def venda_update(request, pk):
+    try:
+        venda = Venda.objects.get(pk=pk)
+    except Venda.DoesNotExist:
+        return JsonResponse({"error": "Venda not found"}, status=404)
+    
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        
+        # Atualizar apenas campos permitidos (não permite alterar itens após criação)
+        venda.forma_pagamento = data.get('forma_pagamento', venda.forma_pagamento)
+        venda.desconto = float(data.get('desconto', venda.desconto))
+        venda.status = data.get('status', venda.status)
+        
+        # Recalcular valor final com novo desconto
+        venda.valor_final = venda.valor_total - venda.desconto
+        venda.save()
+        
+        return JsonResponse({"venda": venda_to_dict(venda)})
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def venda_detail(request, pk):
+    try:
+        venda = Venda.objects.select_related('cliente').prefetch_related('itens__produto').get(pk=pk)
+        return JsonResponse({"venda": venda_to_dict(venda)})
+    except Venda.DoesNotExist:
+        return JsonResponse({"error": "Venda not found"}, status=404)

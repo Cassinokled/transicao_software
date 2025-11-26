@@ -78,3 +78,57 @@ class Produto(models.Model):
 
     def __str__(self):
         return f"{self.descricao} (#{self.cod})"
+
+
+class Venda(models.Model):
+    STATUS_CHOICES = [
+        ('Concluída', 'Concluída'),
+        ('Pendente', 'Pendente'),
+        ('Cancelada', 'Cancelada'),
+    ]
+    
+    FORMA_PAGAMENTO_CHOICES = [
+        ('Dinheiro', 'Dinheiro'),
+        ('Cartão', 'Cartão'),
+        ('PIX', 'PIX'),
+    ]
+    
+    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, related_name='vendas')
+    data_venda = models.DateField()
+    forma_pagamento = models.CharField(max_length=20, choices=FORMA_PAGAMENTO_CHOICES, default='Dinheiro')
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    desconto = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    valor_final = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Concluída')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Venda #{self.id} - {self.cliente.nome}"
+
+    def calcular_totais(self):
+        """Calcula valor total baseado nos itens"""
+        total = sum(item.subtotal for item in self.itens.all())
+        self.valor_total = total
+        self.valor_final = total - self.desconto
+        self.save()
+
+
+class ItemVenda(models.Model):
+    venda = models.ForeignKey(Venda, on_delete=models.CASCADE, related_name='itens')
+    produto = models.ForeignKey(Produto, on_delete=models.PROTECT)
+    quantidade = models.PositiveIntegerField()
+    valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # Calcula o subtotal
+        self.subtotal = self.quantidade * self.valor_unitario
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.produto.descricao} - Qtd: {self.quantidade}"

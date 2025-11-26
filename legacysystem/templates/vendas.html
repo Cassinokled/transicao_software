@@ -45,6 +45,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                <div id="paginationControls" class="pagination"></div>
             </main>
         </main>
 
@@ -63,38 +65,51 @@
                     <div class="cliente-block">
                         <label for="vendaClienteSearch">Cliente</label>
                         <div class="search-row">
-                            <input id="vendaClienteSearch" type="text" placeholder="Buscar cliente" class="search-input">
-                            <img src="{% static '/icons/lupa_icon.svg' %}" alt="Buscar" class="search-icon">
+                            <input id="vendaClienteSearch" type="text" placeholder="Buscar cliente" class="search-input" autocomplete="off">
+                            <img src="{% static '/icons/lupa_icon.svg' %}" alt="Buscar" class="search-icon search-icon-cliente">
                         </div>
 
-                        <div class="cliente-info">
+                        <!-- Dropdown de clientes -->
+                        <div id="clientesDropdown" class="clientes-dropdown" style="display: none;">
+                            <!-- Lista de clientes será preenchida dinamicamente -->
+                        </div>
+
+                        <div class="cliente-info" id="clienteInfoDisplay" style="display: none;">
                             <div class="cliente-text">
-                                <div class="cliente-nome">Maria Silva</div>
-                                <div class="cliente-contato">(44) 0000-0000</div>
-                                <div class="cliente-email">maria@gmail.com</div>
-                            </div>
-                            <div class="camera-placeholder">
-                                <div class="camera-icon">+</div>
+                                <div class="cliente-nome" id="clienteNome">-</div>
+                                <div class="cliente-contato" id="clienteContato">-</div>
+                                <div class="cliente-email" id="clienteEmail">-</div>
                             </div>
                         </div>
+                        <input type="hidden" id="vendaClienteId">
                     </div>
 
                     <div class="itens-block">
                         <div class="itens-title">Itens</div>
-                        <div class="itens-row">
+                        
+                        <!-- Container para produtos adicionados -->
+                        <div id="produtosAdicionados" class="produtos-adicionados-container">
+                            <!-- Produtos adicionados aparecerão aqui -->
+                        </div>
+
+                        <!-- Formulário para adicionar novo produto -->
+                        <div class="itens-row" id="novoProdutoForm">
                             <div class="field prod-field">
-                                <label for="vendaProdutoSelect">Produto</label>
-                                <select id="vendaProdutoSelect">
-                                    <option>Produto</option>
-                                </select>
+                                <label for="vendaProdutoSearch">Produto</label>
+                                <input id="vendaProdutoSearch" type="text" placeholder="Buscar produto" class="search-input" autocomplete="off">
+                                
+                                <!-- Dropdown de produtos -->
+                                <div id="produtosDropdown" class="produtos-dropdown" style="display: none;">
+                                    <!-- Lista de produtos será preenchida dinamicamente -->
+                                </div>
                             </div>
                             <div class="field qtd-field">
                                 <label for="vendaItemQtd">Quantidade</label>
-                                <input id="vendaItemQtd" type="text" value="1">
+                                <input id="vendaItemQtd" type="number" value="1" min="1">
                             </div>
                             <div class="field valor-field">
                                 <label for="vendaItemValorUnit">Valor Unitário</label>
-                                <input id="vendaItemValorUnit" type="text" placeholder="R$ 00,00">
+                                <input id="vendaItemValorUnit" type="text" placeholder="R$ 0,00" readonly>
                             </div>
                         </div>
                         <button id="adicionarProdutoVenda" class="add-item-btn" type="button">Adicionar Produto</button>
@@ -107,17 +122,12 @@
                 <!-- Right column: Pagamento + Totais -->
                 <div class="right-col">
                     <div class="pagamento-block">
-                        <div class="pagamento-title">Pagamento</div>
-                        <div class="pagamento-options">
-                            <label><input type="radio" name="pagamentoTipo" value="avista" checked> À vista</label>
-                            <label><input type="radio" name="pagamentoTipo" value="parcelado"> Parcelado</label>
-                        </div>
-
                         <div class="field">
                             <label for="formaPagamento">Forma de pagamento:</label>
                             <select id="formaPagamento">
-                                <option>Cartão</option>
-                                <option>Dinheiro</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Cartão">Cartão</option>
+                                <option value="PIX">PIX</option>
                             </select>
                         </div>
 
@@ -143,7 +153,6 @@
                 <div class="modal-actions">
                     <button id="salvarVenda" class="btn-save" type="button">Salvar</button>
                     <button id="fecharModalVendaCancelar" class="btn-cancel" type="button">Cancelar</button>
-                    <button id="excluirVenda" class="btn-delete" type="button">Excluir</button>
                 </div>
 
                 <input type="hidden" id="vendaID">
