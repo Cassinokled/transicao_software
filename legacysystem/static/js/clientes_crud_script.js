@@ -102,6 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
         limparInputs();
         // gerar cod automático no frontend com base nos itens já carregados
         campos.cod.value = gerarCodAutomatico();
+        campos.cod.readOnly = true;
         modalOverlay.style.display = "flex";
     });
 
@@ -190,6 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let campo in campos) {
             campos[campo].value = dados[campo] ?? "";
         }
+        campos.cod.readOnly = true;
         modalOverlay.style.display = "flex";
     }
 

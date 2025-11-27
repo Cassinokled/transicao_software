@@ -7,17 +7,91 @@
     <title>Dashboard - Perfil</title>
     <link rel="stylesheet" href="{% static '/css/base.css' %}">
     <link rel="stylesheet" href="{% static '/css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static '/css/perfil.css' %}">
 </head>
+{% load static %}
 <body>
-    {% include 'background.html' %}
-    
-    <div class="container-dashboard">
-        {% include 'sidebar.html' %}
-        
+  {% include 'background.html' %}
+
+  <div class="container-dashboard">
+      {% include 'sidebar.html' %}
+
         <main>
-            <!-- bem vindo  (puxando primeiro nome do usuario)-->
-            <h1 class="titulo-boas-vindas">Bem vindo, {{ user.first_name|default:user.username }}!</h1>
-    
-    <script src="{% static '/js/script.js' %}"></script>
+            <h1 class="titulo-boas-vindas">Perfil do Usuário</h1>
+
+            <div class="perfil-wrapper">
+                <div class="produtos-lista">
+                  <div class="form-grid">
+
+                    <h2 class="section-title">Informações do Usuário</h2>
+
+                    <div class="field span-3">
+                      <label>Nome completo</label>
+                      <div class="info-value">{{ funcionario.nome|default:user.username }}</div>
+                    </div>
+
+                    <div class="field span-1">
+                      <label>Telefone</label>
+                      <div class="info-value">{{ funcionario.celular|default:'-' }}</div>
+                    </div>
+
+                    <div class="field span-1">
+                      <label>Departamento</label>
+                      <div class="info-value">-</div>
+                    </div>
+
+                    <div class="field span-2">
+                      <label>E-mail</label>
+                      <div class="info-value">{{ funcionario.email|default:user.email }}</div>
+                    </div>
+
+                    <div class="field span-2">
+                      <label>Cargo</label>
+                      <div class="info-value">-</div>
+                    </div>
+
+                    <h2 class="section-title">Segurança</h2>
+                    <p class="muted-text">Último login: <strong>{{ user.last_login|date:"d/m/Y H:i" }}</strong></p>
+
+                    <div class="actions-row span-2" style="justify-content: space-between;">
+                      <button type="button" class="btn-secondary" id="btnAlterarSenha">Alterar senha</button>
+                      <button type="button" class="btn-danger" id="btnEncerrarSessoes">Encerrar sessões</button>
+                    </div>
+
+                  </div>
+                </div>
+            </div>
+      </main>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal-content">
+      <h2>Alterar Senha</h2>
+
+      <div class="field span-half">
+        <label>Senha antiga</label>
+        <input type="password" id="oldPassword" placeholder="Digite sua senha atual">
+      </div>
+
+      <div class="field span-half">
+        <label>Nova senha</label>
+        <input type="password" id="newPassword" placeholder="Digite a nova senha">
+      </div>
+
+      <div class="field span-half">
+        <label>Confirmar nova senha</label>
+        <input type="password" id="confirmPassword" placeholder="Confirme a nova senha">
+      </div>
+
+      <div class="sidebar-container">
+        <button id="salvarSenha" class="btn-primary">Salvar</button>
+        <button id="fecharModalSenha" class="btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  
+    <script src="{% static 'js/script.js' %}"></script>
+   <script src="{% static 'js/perfil_crud_script.js' %}"></script>
 </body>
+
 </html>

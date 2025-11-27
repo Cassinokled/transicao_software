@@ -1,11 +1,17 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.contrib.auth.models import User
-import csv
+from django.db.models import Sum, F
+from django.utils import timezone
 from django.http import HttpResponse
-from .models import Cliente 
+import csv 
+
+from .models import Cliente, Produto, Venda, Funcionario, Fornecedor
+from django.db.models.functions import ExtractMonth
+import json 
 
 
 # -----------------------------
@@ -40,11 +46,132 @@ def logout_view(request):
 
 @login_required(login_url='login')
 def dashboard_view(request):
-    return render(request, 'dashboard.html')
+    clientes_count = Cliente.objects.count()
+    produtos_estoque_total = Produto.objects.aggregate(total=Sum('estoque'))['total'] or 0
+    
+    now = timezone.now()
+    current_year = now.year
+    current_month = now.month
+    
+    # gafico dashboard
+    sales_by_month = Venda.objects.filter(data_venda__year=current_year).annotate(month=ExtractMonth('data_venda')).values('month').annotate(total=Sum('valor_final')).order_by('month')
+    months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    sales_data = [0] * 12
+    for sale in sales_by_month:
+        sales_data[sale['month'] - 1] = float(sale['total'])
+    
+    # Mês anterior
+    last_month = current_month - 1
+    last_year = current_year
+    if last_month == 0:
+        last_month = 12
+        last_year -= 1
+    
+    vendas_mes = Venda.objects.filter(
+        data_venda__year=current_year,
+        data_venda__month=current_month
+    ).aggregate(total=Sum('valor_final'))['total'] or 0
+    vendas_mes_formatado = f"R$ {vendas_mes:,.2f}".replace('.', ',').replace(',', '.', 1).replace(',', ',')
+    
+    fornecedores_count = Fornecedor.objects.count()
+    funcionarios_count = Funcionario.objects.count()
+    produtos_estoque_baixo = Produto.objects.filter(estoque__lt=10).count()
+    
+    # Novos clientes no mês atual
+    novos_clientes_mes = Cliente.objects.filter(
+        created_at__year=current_year,
+        created_at__month=current_month
+    ).count()
+    
+    # Novos clientes no mês anterior
+    novos_clientes_last_month = Cliente.objects.filter(
+        created_at__year=last_year,
+        created_at__month=last_month
+    ).count()
+    
+    # Status clientes
+    clientes_status = 'verde' if novos_clientes_mes > novos_clientes_last_month else 'vermelho'
+    clientes_seta = 'cima' if novos_clientes_mes > novos_clientes_last_month else 'baixo'
+    
+    # Vendas no mês anterior
+    vendas_last_month = Venda.objects.filter(
+        data_venda__year=last_year,
+        data_venda__month=last_month
+    ).aggregate(total=Sum('valor_final'))['total'] or 0
+    
+    # Status vendas
+    vendas_status = 'verde' if vendas_mes > vendas_last_month else 'vermelho'
+    vendas_seta = 'cima' if vendas_mes > vendas_last_month else 'baixo'
+    
+    vendas_total_count = Venda.objects.count()
+    
+    # Últimos registros
+    eventos = []
+    modelos = [
+        (Cliente, 'Cliente'),
+        (Funcionario, 'Funcionário'),
+        (Fornecedor, 'Fornecedor'),
+        (Produto, 'Produto'),
+        (Venda, 'Venda'),
+    ]
+    
+    for model, name in modelos:
+        # Adicionados
+        for obj in model.objects.order_by('-created_at')[:10]:
+            acao = f'{name} adicionado' if name != 'Venda' else 'Venda realizada'
+            eventos.append({
+                'acao': acao,
+                'id': getattr(obj, 'cod', obj.id),
+                'hora': obj.created_at.strftime('%H:%M'),
+                'data': obj.created_at
+            })
+        # Alterados
+        for obj in model.objects.filter(updated_at__gt=F('created_at')).order_by('-updated_at')[:10]:
+            acao = f'{name} ajustado'
+            eventos.append({
+                'acao': acao,
+                'id': getattr(obj, 'cod', obj.id),
+                'hora': obj.updated_at.strftime('%H:%M'),
+                'data': obj.updated_at
+            })
+    
+    eventos.sort(key=lambda x: x['data'], reverse=True)
+    ultimos_registros = eventos[:5]
+    
+    context = {
+        'clientes_count': clientes_count,
+        'produtos_estoque_total': produtos_estoque_total,
+        'vendas_mes_formatado': vendas_mes_formatado,
+        'fornecedores_count': fornecedores_count,
+        'funcionarios_count': funcionarios_count,
+        'produtos_estoque_baixo': produtos_estoque_baixo,
+        'novos_clientes_mes': novos_clientes_mes,
+        'clientes_status': clientes_status,
+        'clientes_seta': clientes_seta,
+        'vendas_total_count': vendas_total_count,
+        'vendas_status': vendas_status,
+        'vendas_seta': vendas_seta,
+        'ultimos_registros': ultimos_registros,
+        'sales_data_json': json.dumps(sales_data),
+        'months_json': json.dumps(months),
+        'current_year': current_year,
+    }
+    return render(request, 'dashboard.html', context)
 
 @login_required(login_url='login')
 def perfil_view(request):
-    return render(request, 'perfil.html')
+    user = request.user
+    try:
+        funcionario = Funcionario.objects.get(email=user.email)
+        context = {
+            'user': user,
+            'funcionario': funcionario,
+        }
+    except Funcionario.DoesNotExist:
+        context = {
+            'user': user,
+        }
+    return render(request, 'perfil.html', context)
 
 @login_required(login_url='login')
 def clientes_view(request):
@@ -184,6 +311,10 @@ def funcionarios_list(request):
 def funcionario_create(request):
     data = json.loads(request.body.decode("utf-8"))
     form = FuncionarioForm(data)
+
+    if "senha" in data and data["senha"].strip():
+        data["senha"] = make_password(data["senha"])
+
     if form.is_valid():
         func = form.save()
         return JsonResponse({"funcionario": funcionario_to_dict(func)}, status=201)
@@ -199,6 +330,9 @@ def funcionario_update(request, pk):
         return JsonResponse({"error": "Funcionario not found"}, status=404)
 
     data = json.loads(request.body.decode("utf-8"))
+    if "senha" in data and data["senha"].strip():
+        data["senha"] = make_password(data["senha"])
+
     form = FuncionarioForm(data, instance=func)
 
     if form.is_valid():
@@ -524,3 +658,27 @@ def venda_detail(request, pk):
         return JsonResponse({"venda": venda_to_dict(venda)})
     except Venda.DoesNotExist:
         return JsonResponse({"error": "Venda not found"}, status=404)
+
+@csrf_exempt
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == 'POST':
+        old_password = request.POST.get('old_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        user = request.user
+        if not user.check_password(old_password):
+            return JsonResponse({'error': 'Senha antiga incorreta'}, status=400)
+        
+        if new_password != confirm_password:
+            return JsonResponse({'error': 'As senhas não coincidem'}, status=400)
+        
+        if len(new_password) < 8:
+            return JsonResponse({'error': 'A nova senha deve ter pelo menos 8 caracteres'}, status=400)
+        
+        user.set_password(new_password)
+        user.save()
+        return JsonResponse({'success': 'Senha alterada com sucesso'})
+    
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
